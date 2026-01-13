@@ -192,12 +192,19 @@ def fill_and_submit_cover_letter(page, cover_letter_text: str, timeout_ms: int =
         # Ищем кнопку отправки
         submit_btn = dlg.locator('button[type="submit"]').first
         if submit_btn.count() == 0:
-            # Альтернативный селектор
+            # Альтернативные селекторы
             submit_btn = dlg.locator('button:has-text("Откликнуться")').first
+        if submit_btn.count() == 0:
+            submit_btn = dlg.locator('[data-qa="vacancy-response-popup-submit-button"]').first
+        if submit_btn.count() == 0:
+            submit_btn = page.locator('button:has-text("Откликнуться")').first
         
         if submit_btn.count() == 0:
             print("    ⚠️ Кнопка отправки не найдена")
             return False
+        
+        # Проверяем, что кнопка видима и кликабельна
+        submit_btn.wait_for(state="visible", timeout=3000)
         
         # Отправляем отклик
         submit_btn.click()
@@ -396,10 +403,34 @@ def login_with_phone(page, phone_number: str, sms_code: Optional[str] = None) ->
         
         code_input.click()
         code_input.fill(sms_code)
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(1000)
+        
+        # Пытаемся найти и нажать кнопку подтверждения (если есть)
+        submit_code_btn = page.locator('button:has-text("Подтвердить")').first
+        if submit_code_btn.count() == 0:
+            submit_code_btn = page.locator('button[type="submit"]').first
+        if submit_code_btn.count() == 0:
+            # Пробуем Enter
+            code_input.press("Enter")
+        else:
+            submit_code_btn.click()
+        
+        # Ждём завершения входа (либо успех, либо ошибка)
+        page.wait_for_timeout(3000)
         
         # Проверяем успешный вход
-        page.wait_for_timeout(3000)
+        if page.locator('[data-qa="mainmenu_applicantProfile"]').count() > 0:
+            print("✅ Вход выполнен успешно")
+            return True
+        
+        # Проверяем ошибку (неверный код)
+        error_msg = page.locator('text=/неверный код|ошибка/i').first
+        if error_msg.count() > 0:
+            print("⚠️ Неверный код из SMS")
+            return False
+        
+        # Дополнительная проверка через URL или другие индикаторы
+        page.wait_for_timeout(2000)
         if page.locator('[data-qa="mainmenu_applicantProfile"]').count() > 0:
             print("✅ Вход выполнен успешно")
             return True
