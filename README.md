@@ -324,6 +324,12 @@ python main.py --cover-letter "Здравствуйте! Меня заинтер
 
 **Важно:** Используйте скрипт ответственно. Чрезмерное количество автоматических откликов может привести к ограничениям со стороны hh.ru.
 
+## How to contribute
+
+1. Fork the repo
+2. Create a branch
+3. Make changes
+4. Open a Pull Request
 
 ## ☕ Поддержать проект
 
